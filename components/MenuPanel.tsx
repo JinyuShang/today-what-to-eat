@@ -226,7 +226,7 @@ export function MenuPanel({ isOpen, onClose, userIngredients = [] }: MenuPanelPr
             <div className="text-center py-12 text-gray-500">
               <BookOpen className="w-16 h-16 mx-auto mb-4 text-gray-300" />
               <p>菜单是空的</p>
-              <p className="text-sm mt-2">从菜谱卡片点击"加菜单"添加</p>
+              <p className="text-sm mt-2">从菜谱卡片点击「加菜单」添加</p>
             </div>
           ) : (
             <div className="space-y-4">
