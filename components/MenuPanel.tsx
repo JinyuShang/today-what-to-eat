@@ -1,16 +1,18 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { BookOpen, X, Trash2, ShoppingCart, Calendar, CheckCircle } from 'lucide-react';
+import { BookOpen, X, Trash2, ShoppingCart, Calendar, CheckCircle, Users } from 'lucide-react';
 import { MatchedRecipe } from '@/types';
 import { formatTime, cn } from '@/lib/utils';
 import { getIngredientCategory } from '@/lib/utils';
 import { matchRecipes } from '@/lib/recipe-db';
+import { calculateIngredientAmount, getShoppingTips } from '@/lib/ingredient-portions';
 
 interface MenuPanelProps {
   isOpen: boolean;
   onClose: () => void;
   userIngredients?: string[]; // 新增：用户输入的食材
+  servings: number; // 全局人数设置
 }
 
 interface MenuItem {
@@ -19,7 +21,7 @@ interface MenuItem {
   originalMissingIngredients: string[]; // 记录添加时的缺少食材
 }
 
-export function MenuPanel({ isOpen, onClose, userIngredients = [] }: MenuPanelProps) {
+export function MenuPanel({ isOpen, onClose, userIngredients = [], servings }: MenuPanelProps) {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [pantryIngredients, setPantryIngredients] = useState<string[]>([]);
   const [purchasedIngredients, setPurchasedIngredients] = useState<Set<string>>(new Set()); // 已购买的食材
@@ -156,15 +158,18 @@ export function MenuPanel({ isOpen, onClose, userIngredients = [] }: MenuPanelPr
 
   // 生成购物清单
   const handleGenerateShopping = () => {
-    const ingredients = allMissingIngredients.map(item => item.name);
-    if (ingredients.length > 0) {
+    const ingredientsWithAmounts = allMissingIngredients.map(item =>
+      calculateIngredientAmount(item.name, servings)
+    );
+
+    if (ingredientsWithAmounts.length > 0) {
       // 先清空旧购物清单和 localStorage
       localStorage.removeItem('shopping-list');
       // 触发重置事件（清空组件状态）
       window.dispatchEvent(new CustomEvent('reset-shopping-list'));
       // 稍微延迟确保重置完成后再添加食材
       setTimeout(() => {
-        (window as any).addShoppingItems?.(ingredients);
+        (window as any).addShoppingItems?.(ingredientsWithAmounts);
         // 然后打开购物清单面板
         window.dispatchEvent(new CustomEvent('open-shopping-list'));
       }, 0);
@@ -203,18 +208,31 @@ export function MenuPanel({ isOpen, onClose, userIngredients = [] }: MenuPanelPr
         {/* 统计信息 */}
         {menuItems.length > 0 && (
           <div className="px-6 py-3 bg-purple-50 border-b border-purple-100">
-            <div className="text-sm text-purple-800">
-              {allMissingIngredients.length > 0 && (
-                <span>📅 共需 <strong>{allMissingIngredients.length}</strong> 种食材</span>
-              )}
-              {allMissingIngredients.length === 0 && (
-                <span>✅ 食材都齐全，可以做菜了！</span>
-              )}
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-purple-800">
+                {allMissingIngredients.length > 0 && (
+                  <span>📅 共需 <strong>{allMissingIngredients.length}</strong> 种食材</span>
+                )}
+                {allMissingIngredients.length === 0 && (
+                  <span>✅ 食材都齐全，可以做菜了！</span>
+                )}
+              </div>
+              <div className="flex items-center gap-1 text-sm text-purple-600">
+                <Users className="w-4 h-4" />
+                <span className="font-medium">{servings}人份</span>
+              </div>
             </div>
             {menuItemsWithMatch.filter(i => i.canCook).length > 0 && (
               <div className="mt-2 text-sm text-green-700">
                 <CheckCircle className="w-4 h-4 inline mr-1" />
                 {menuItemsWithMatch.filter(i => i.canCook).length} 道菜可以做了
+              </div>
+            )}
+            {allMissingIngredients.length > 0 && (
+              <div className="mt-2 space-y-1">
+                {getShoppingTips(allMissingIngredients.map(i => i.name), servings).map((tip, idx) => (
+                  <div key={idx} className="text-xs text-purple-700">{tip}</div>
+                ))}
               </div>
             )}
           </div>

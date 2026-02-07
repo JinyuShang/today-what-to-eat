@@ -9,6 +9,13 @@ export interface Recipe {
   difficulty: 'easy' | 'medium' | 'hard';
   tags: string[];
   image?: string;
+  nutritionalInfo?: {
+    calories: number; // 卡路里
+    protein: string; // 蛋白质
+    carbs: string; // 碳水化合物
+    fat: string; // 脂肪
+    servings: number; // 几人份
+  };
 }
 
 // 匹配后的菜谱
@@ -41,7 +48,8 @@ export interface SharedList {
 
 // 购物清单项
 export interface ShoppingItem {
-  name: string;
+  name: string;       // 完整名称，可能包含用量（如"番茄 300g"）
+  pureName?: string;  // 纯食材名称（如"番茄"），用于分类和匹配
   category: 'vegetable' | 'meat' | 'seasoning' | 'staple' | 'other';
   checked: boolean;
   recipeId?: string;

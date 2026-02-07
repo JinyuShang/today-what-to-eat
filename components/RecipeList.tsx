@@ -8,9 +8,10 @@ import { isFavorite, addFavorite, removeFavorite, addHistory } from '@/lib/stora
 interface RecipeListProps {
   recipes: MatchedRecipe[];
   onAddToShopping: (recipe: MatchedRecipe) => void;
+  servings: number; // 全局人数设置
 }
 
-export function RecipeList({ recipes, onAddToShopping }: RecipeListProps) {
+export function RecipeList({ recipes, onAddToShopping, servings }: RecipeListProps) {
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [menuRecipeIds, setMenuRecipeIds] = useState<Set<string>>(new Set());
 
@@ -118,6 +119,7 @@ export function RecipeList({ recipes, onAddToShopping }: RecipeListProps) {
           onAddToShopping={onAddToShopping}
           onView={handleView}
           inMenu={menuRecipeIds.has(recipe.id)}
+          servings={servings}
         />
       ))}
     </div>

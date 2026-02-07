@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChefHat, Heart, Share2, Sparkles, Menu as MenuIcon, X, Package, BookOpen } from 'lucide-react';
+import { ChefHat, Heart, Share2, Sparkles, Menu as MenuIcon, X, Package, BookOpen, Users, ShoppingCart } from 'lucide-react';
 import { IngredientInput } from '@/components/IngredientInput';
 import { RecipeList } from '@/components/RecipeList';
 import { ShoppingList } from '@/components/ShoppingList';
@@ -21,9 +21,17 @@ export default function Home() {
   const [showMenu, setShowMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [servings, setServings] = useState(2); // 全局人数设置
+  const [bottomNavVisible, setBottomNavVisible] = useState(true); // 移动端底部导航栏
 
-  // 解析分享链接 + 加载库存食材
+  // 解析分享链接 + 加载库存食材 + 加载人数设置
   useEffect(() => {
+    // 加载人数设置
+    const savedServings = localStorage.getItem('servings');
+    if (savedServings) {
+      setServings(parseInt(savedServings));
+    }
+
     const { ingredients: sharedIngredients } = parseShareUrl();
     let baseIngredients: string[] = [];
 
@@ -122,6 +130,12 @@ export default function Home() {
     }
   };
 
+  // 修改人数设置
+  const handleServingsChange = (newServings: number) => {
+    setServings(newServings);
+    localStorage.setItem('servings', newServings.toString());
+  };
+
   const canCookCount = matchedRecipes.filter(r => r.canCook).length;
 
   return (
@@ -142,6 +156,25 @@ export default function Home() {
 
             {/* 桌面端菜单 */}
             <div className="hidden md:flex items-center gap-2">
+              {/* 人数选择器 */}
+              <div className="flex items-center gap-1 px-3 py-2 bg-orange-50 rounded-xl">
+                <Users className="w-4 h-4 text-orange-600" />
+                <span className="text-sm text-gray-700 mr-1">{servings}人</span>
+                {[1, 2, 3, 4, 5, 6].map(num => (
+                  <button
+                    key={num}
+                    onClick={() => handleServingsChange(num)}
+                    className={`w-6 h-6 rounded-lg text-xs font-medium transition-all ${
+                      servings === num
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-white text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
+
               <button
                 onClick={() => setShowPantry(true)}
                 className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-orange-50 rounded-xl transition-colors"
@@ -194,34 +227,34 @@ export default function Home() {
             <div className="px-4 py-3 space-y-2">
               <button
                 onClick={() => { setShowPantry(true); setMobileMenuOpen(false); }}
-                className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50 rounded-xl"
+                className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-gray-50 rounded-xl touch-manipulation transition-colors min-h-[44px]"
               >
                 <Package className="w-5 h-5" />
                 我的库存
               </button>
               <button
                 onClick={() => { setShowFavorites(true); setMobileMenuOpen(false); }}
-                className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50 rounded-xl"
+                className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-gray-50 rounded-xl touch-manipulation transition-colors min-h-[44px]"
               >
                 <Heart className="w-5 h-5" />
                 我的收藏
               </button>
               <button
                 onClick={() => { setShowMenu(true); setMobileMenuOpen(false); }}
-                className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50 rounded-xl"
+                className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-gray-50 rounded-xl touch-manipulation transition-colors min-h-[44px]"
               >
                 <BookOpen className="w-5 h-5" />
                 我的菜单
               </button>
               <button
                 onClick={() => { setShowShoppingList(true); setMobileMenuOpen(false); }}
-                className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50 rounded-xl"
+                className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-gray-50 rounded-xl touch-manipulation transition-colors min-h-[44px]"
               >
                 🛒 购物清单
               </button>
               <button
                 onClick={() => { handleShare(); setMobileMenuOpen(false); }}
-                className="w-full flex items-center gap-2 px-4 py-2 text-left bg-orange-50 text-orange-700 rounded-xl"
+                className="w-full flex items-center gap-2 px-4 py-3 text-left bg-orange-50 text-orange-700 rounded-xl touch-manipulation transition-colors min-h-[44px]"
               >
                 <Share2 className="w-5 h-5" />
                 {copied ? '已复制链接' : '分享给好友'}
@@ -232,7 +265,7 @@ export default function Home() {
       </nav>
 
       {/* 主内容 */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20 md:pb-8">
         {/* Hero 区域 */}
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
@@ -279,12 +312,54 @@ export default function Home() {
           <RecipeList
             recipes={matchedRecipes}
             onAddToShopping={handleAddToShopping}
+            servings={servings}
           />
         </div>
       </main>
 
+      {/* 移动端底部导航栏 */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 pb-safe touch-manipulation">
+        <div className="grid grid-cols-5 h-16">
+          <button
+            onClick={() => setShowPantry(true)}
+            className="flex flex-col items-center justify-center gap-1 text-gray-600 active:bg-orange-50 touch-manipulation transition-colors"
+          >
+            <Package className="w-6 h-6" />
+            <span className="text-xs">库存</span>
+          </button>
+          <button
+            onClick={() => setShowFavorites(true)}
+            className="flex flex-col items-center justify-center gap-1 text-gray-600 active:bg-orange-50 touch-manipulation transition-colors"
+          >
+            <Heart className="w-6 h-6" />
+            <span className="text-xs">收藏</span>
+          </button>
+          <button
+            onClick={() => setShowMenu(true)}
+            className="flex flex-col items-center justify-center gap-1 text-gray-600 active:bg-orange-50 touch-manipulation transition-colors"
+          >
+            <BookOpen className="w-6 h-6" />
+            <span className="text-xs">菜单</span>
+          </button>
+          <button
+            onClick={() => setShowShoppingList(true)}
+            className="flex flex-col items-center justify-center gap-1 text-gray-600 active:bg-orange-50 touch-manipulation transition-colors"
+          >
+            <ShoppingCart className="w-6 h-6" />
+            <span className="text-xs">清单</span>
+          </button>
+          <button
+            onClick={handleShare}
+            className="flex flex-col items-center justify-center gap-1 text-orange-500 active:bg-orange-50 touch-manipulation transition-colors"
+          >
+            <Share2 className="w-6 h-6" />
+            <span className="text-xs">{copied ? '已分享' : '分享'}</span>
+          </button>
+        </div>
+      </div>
+
       {/* 底部 */}
-      <footer className="mt-20 py-8 border-t border-gray-200">
+      <footer className="mt-20 py-8 border-t border-gray-200 pb-safe md:pb-0">
         <div className="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">
           <p>🍳 今天吃什么 - 剩余食材菜谱生成器</p>
           <p className="mt-2">为黑客松而作 · 1小时快速开发</p>
@@ -315,6 +390,7 @@ export default function Home() {
         isOpen={showMenu}
         onClose={() => setShowMenu(false)}
         userIngredients={ingredients}
+        servings={servings}
       />
     </div>
   );

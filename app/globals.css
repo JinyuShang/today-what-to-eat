@@ -61,3 +61,109 @@
 .animate-heart {
   animation: pulse-heart 0.3s ease-out;
 }
+
+/* 移动端优化 */
+@layer utilities {
+  /* 安全区域适配（iPhone 刘海屏等） */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .h-safe {
+    height: calc(100vh - env(safe-area-inset-top) - env(safe-inset-bottom));
+  }
+
+  /* 移动端触摸优化 */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* 移动端点击高亮去除 */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 移动端按钮更大触摸区域 */
+  @media (max-width: 768px) {
+    .min-h-[44px] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+
+  /* 移动端输入框优化 */
+  @media (max-width: 768px) {
+    input, textarea, select {
+      font-size: 16px !important; /* 防止iOS自动放大 */
+    }
+  }
+
+  /* 移动端横向滚动优化 */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+  }
+
+  /* 移动端卡片阴影更明显 */
+  @media (max-width: 768px) {
+    .mobile-card {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  /* 移动端按钮反馈动画 */
+  @media (max-width: 768px) {
+    button:active {
+      transform: scale(0.97);
+      transition: transform 0.1s;
+    }
+  }
+
+  /* 隐藏移动端的桌面端菜单 */
+  @media (max-width: 768px) {
+    .hide-mobile {
+      display: none !important;
+    }
+  }
+
+  /* 隐藏桌面端的移动端元素 */
+  @media (min-width: 769px) {
+    .hide-desktop {
+      display: none !important;
+    }
+  }
+
+  /* 移动端平滑滚动 */
+  @media (max-width: 768px) {
+    * {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    html, body {
+      overscroll-behavior-y: none; /* 防止下拉刷新 */
+    }
+
+    /* 弹窗内容的滚动优化 */
+    .modal-scroll {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+  }
+
+  /* 移动端长按选中文本优化 */
+  @media (max-width: 768px) {
+    .selectable {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+
+    .non-selectable {
+      -webkit-user-select: none;
+      user-select: none;
+    }
+  }
+}

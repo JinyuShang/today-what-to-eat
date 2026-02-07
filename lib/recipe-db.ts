@@ -1,5 +1,6 @@
 import { Recipe, MatchedRecipe } from '@/types';
 import { matchIngredient } from './utils';
+import { enhanceRecipe } from './recipe-enhancements';
 
 // 菜谱数据库
 export const RECIPES: Recipe[] = [
@@ -417,6 +418,9 @@ export function matchRecipes(userIngredients: string[]): MatchedRecipe[] {
 
   return RECIPES
     .map(recipe => {
+      // 先增强菜谱（添加图片和营养信息）
+      const enhanced = enhanceRecipe(recipe);
+
       // 找出匹配的食材
       const matchedIngredients = recipe.ingredients.filter(recipeIng =>
         userIngredients.some(userIng =>
@@ -435,7 +439,7 @@ export function matchRecipes(userIngredients: string[]): MatchedRecipe[] {
         : 0;
 
       return {
-        ...recipe,
+        ...enhanced,
         matchScore,
         matchedIngredients,
         missingIngredients,
@@ -448,21 +452,24 @@ export function matchRecipes(userIngredients: string[]): MatchedRecipe[] {
 
 // 根据 ID 获取菜谱
 export function getRecipeById(id: string): Recipe | undefined {
-  return RECIPES.find(r => r.id === id);
+  const recipe = RECIPES.find(r => r.id === id);
+  return recipe ? enhanceRecipe(recipe) : undefined;
 }
 
 // 搜索菜谱（按名称或食材）
 export function searchRecipes(query: string): Recipe[] {
   const lowerQuery = query.toLowerCase();
-  return RECIPES.filter(recipe =>
-    recipe.name.toLowerCase().includes(lowerQuery) ||
-    recipe.ingredients.some(ing => ing.toLowerCase().includes(lowerQuery)) ||
-    recipe.tags.some(tag => tag.toLowerCase().includes(lowerQuery))
-  );
+  return RECIPES
+    .filter(recipe =>
+      recipe.name.toLowerCase().includes(lowerQuery) ||
+      recipe.ingredients.some(ing => ing.toLowerCase().includes(lowerQuery)) ||
+      recipe.tags.some(tag => tag.toLowerCase().includes(lowerQuery))
+    )
+    .map(enhanceRecipe);
 }
 
 // 获取推荐菜谱（随机）
 export function getFeaturedRecipes(count = 6): Recipe[] {
   const shuffled = [...RECIPES].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
+  return shuffled.slice(0, count).map(enhanceRecipe);
 }

@@ -46,11 +46,11 @@ export function IngredientInput({ ingredients, onAdd, onRemove }: IngredientInpu
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="输入食材，如：番茄、鸡蛋..."
-            className="w-full px-4 py-3 pr-12 border-2 border-orange-200 rounded-xl focus:border-orange-400 focus:outline-none transition-colors"
+            className="w-full px-4 py-3 pr-14 md:pr-12 border-2 border-orange-200 rounded-xl focus:border-orange-400 focus:outline-none transition-colors touch-manipulation"
           />
           <button
             onClick={() => handleAdd(input)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 md:p-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -63,14 +63,14 @@ export function IngredientInput({ ingredients, onAdd, onRemove }: IngredientInpu
           {ingredients.map((ing) => (
             <div
               key={ing}
-              className="flex items-center gap-1 px-3 py-1.5 bg-orange-100 text-orange-800 rounded-full text-sm font-medium"
+              className="flex items-center gap-1 px-3 py-2 md:py-1.5 bg-orange-100 text-orange-800 rounded-full text-sm font-medium"
             >
               <span>{ing}</span>
               <button
                 onClick={() => onRemove(ing)}
-                className="p-0.5 hover:bg-orange-200 rounded-full transition-colors"
+                className="p-1 md:p-0.5 hover:bg-orange-200 rounded-full transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center touch-manipulation"
               >
-                <X className="w-3 h-3" />
+                <X className="w-3.5 h-3.5 md:w-3 md:h-3" />
               </button>
             </div>
           ))}
@@ -88,7 +88,7 @@ export function IngredientInput({ ingredients, onAdd, onRemove }: IngredientInpu
               <button
                 key={ing}
                 onClick={() => handleAdd(ing)}
-                className="px-3 py-1.5 bg-white border-2 border-orange-200 text-orange-700 rounded-lg text-sm hover:bg-orange-50 hover:border-orange-300 transition-all"
+                className="px-4 py-2.5 md:px-3 md:py-1.5 bg-white border-2 border-orange-200 text-orange-700 rounded-lg text-sm hover:bg-orange-50 hover:border-orange-300 transition-all touch-manipulation min-h-[44px]"
               >
                 {ing}
               </button>

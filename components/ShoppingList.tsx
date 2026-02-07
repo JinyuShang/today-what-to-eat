@@ -44,12 +44,30 @@ export function ShoppingList({ isOpen, onClose }: ShoppingListProps) {
   const addItems = (ingredients: string[]) => {
     setItems(prev => {
       const newItems = ingredients
-        .filter(ing => !prev.some(item => item.name === ing))
-        .map(name => ({
-          name,
-          category: getIngredientCategory(name) as any,
-          checked: false
-        }));
+        .filter(fullName => {
+          // 解析食材名称，提取纯名称用于比较
+          const nameMatch = fullName.match(/^([^\d\s]+(?:\s+[^\d\s]+)*)/);
+          const pureName = nameMatch ? nameMatch[1].trim() : fullName;
+
+          // 检查是否已存在（使用 pureName 比较）
+          return !prev.some(item => {
+            const itemPureName = item.pureName || item.name;
+            return itemPureName === pureName;
+          });
+        })
+        .map(fullName => {
+          // 解析食材名称（可能包含用量，如"番茄 300g"）
+          // 提取纯食材名称用于分类
+          const nameMatch = fullName.match(/^([^\d\s]+(?:\s+[^\d\s]+)*)/);
+          const pureName = nameMatch ? nameMatch[1].trim() : fullName;
+
+          return {
+            name: fullName, // 保留完整的名称（包含用量）
+            pureName,     // 纯名称用于分类和匹配
+            category: getIngredientCategory(pureName) as any,
+            checked: false
+          };
+        });
       return [...prev, ...newItems];
     });
   };
@@ -68,16 +86,19 @@ export function ShoppingList({ isOpen, onClose }: ShoppingListProps) {
       // 如果是勾选操作（从未勾选变为已勾选），添加到库存 + 记录购买
       const toggledItem = updated[index];
       if (toggledItem.checked) {
+        // 使用 pureName 添加到库存（去掉用量）
+        const itemName = toggledItem.pureName || toggledItem.name;
+
         // 添加到库存食材
         const pantry = JSON.parse(localStorage.getItem('pantry-items') || '[]');
-        if (!pantry.includes(toggledItem.name)) {
-          pantry.push(toggledItem.name);
+        if (!pantry.includes(itemName)) {
+          pantry.push(itemName);
           localStorage.setItem('pantry-items', JSON.stringify(pantry));
 
           // 记录已购买的食材
           const purchased = JSON.parse(localStorage.getItem('purchased-ingredients') || '[]');
-          if (!purchased.includes(toggledItem.name)) {
-            purchased.push(toggledItem.name);
+          if (!purchased.includes(itemName)) {
+            purchased.push(itemName);
             localStorage.setItem('purchased-ingredients', JSON.stringify(purchased));
             // 触发事件通知菜单更新
             window.dispatchEvent(new CustomEvent('ingredients-purchased'));
