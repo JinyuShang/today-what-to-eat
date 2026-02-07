@@ -35,7 +35,7 @@ export default function Home() {
 
     if (sharedIngredients.length > 0) {
       // 有分享链接，合并分享食材和库存食材
-      const allIngredients = [...new Set([...baseIngredients, ...sharedIngredients])];
+      const allIngredients = Array.from(new Set([...baseIngredients, ...sharedIngredients]));
       setIngredients(allIngredients);
       // 保存到库存
       localStorage.setItem('pantry-items', JSON.stringify(allIngredients));
