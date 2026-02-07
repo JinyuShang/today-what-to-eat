@@ -39,7 +39,6 @@ export const RECIPE_IMAGES: Record<string, string> = {
   '凉拌黄瓜': 'https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=400',
   '蚝油生菜': 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400',
   '干煸四季豆': 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400',
-  '西红柿炒鸡蛋': 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
   '醋溜白菜': 'https://images.unsplash.com/photo-1457418862662-8eb0e95c0e09?w=400',
   '清炒时蔬': 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400',
 
