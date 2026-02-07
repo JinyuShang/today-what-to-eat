@@ -28,7 +28,7 @@ export function FavoritesPanel({ isOpen, onClose, onSelect, onRemove }: Favorite
       const saved = localStorage.getItem('menu-items');
       if (saved) {
         const menuItems = JSON.parse(saved);
-        const ids = new Set(menuItems.map((item: any) => item.recipe.id));
+        const ids = new Set<string>(menuItems.map((item: any) => item.recipe.id));
         setMenuRecipeIds(ids);
       } else {
         setMenuRecipeIds(new Set());
@@ -42,7 +42,7 @@ export function FavoritesPanel({ isOpen, onClose, onSelect, onRemove }: Favorite
       const saved = localStorage.getItem('menu-items');
       if (saved) {
         const menuItems = JSON.parse(saved);
-        const ids = new Set(menuItems.map((item: any) => item.recipe.id));
+        const ids = new Set<string>(menuItems.map((item: any) => item.recipe.id));
         setMenuRecipeIds(ids);
       } else {
         setMenuRecipeIds(new Set());
