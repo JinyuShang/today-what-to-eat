@@ -45,7 +45,7 @@ export function PantryPanel({ isOpen, onClose }: PantryPanelProps) {
 
   // 保存库存
   const handleSave = () => {
-    localStorage.setItem('pantry-items', JSON.stringify([...selectedItems]));
+    localStorage.setItem('pantry-items', JSON.stringify(Array.from(selectedItems)));
     // 触发更新事件，通知首页和其他组件
     window.dispatchEvent(new CustomEvent('pantry-updated'));
     onClose();
@@ -165,7 +165,7 @@ export function PantryPanel({ isOpen, onClose }: PantryPanelProps) {
           {/* 其他自定义食材 */}
           {(() => {
             const allDefaultItems = Object.values(DEFAULT_PANTRY_ITEMS).flat();
-            const customItems = [...selectedItems].filter(item => !allDefaultItems.includes(item));
+            const customItems = Array.from(selectedItems).filter(item => !allDefaultItems.includes(item));
 
             return (
               <div className="mb-6">
