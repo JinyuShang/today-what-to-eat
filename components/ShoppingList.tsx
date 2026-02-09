@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ShoppingCart, Check, X, Copy, Trash2 } from 'lucide-react';
 import { ShoppingItem } from '@/types';
-import { getIngredientCategory } from '@/lib/utils';
+import { getIngredientCategory, copyToClipboard } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 interface ShoppingListProps {
@@ -146,13 +146,32 @@ export function ShoppingList({ isOpen, onClose }: ShoppingListProps) {
     });
   };
 
-  const copyToClipboard = async () => {
+  const handleCopyToClipboard = async () => {
     const text = items
       .map(item => `${item.checked ? '✓' : '○'} ${item.name}`)
       .join('\n');
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const success = await copyToClipboard(text);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } else {
+      // 复制失败时的备用方案：使用传统方法
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error('复制失败:', err);
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
   };
 
   if (!isOpen) return null;
@@ -257,7 +276,7 @@ export function ShoppingList({ isOpen, onClose }: ShoppingListProps) {
         {items.length > 0 && (
           <div className="p-6 border-t border-gray-100 flex gap-3">
             <button
-              onClick={copyToClipboard}
+              onClick={handleCopyToClipboard}
               className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
             >
               <Copy className="w-5 h-5" />
