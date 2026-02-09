@@ -11,6 +11,8 @@ import { MenuPanel } from '@/components/MenuPanel';
 import { matchRecipes, getFeaturedRecipes } from '@/lib/recipe-db';
 import { parseShareUrl, generateShareUrl, copyToClipboard } from '@/lib/utils';
 import { MatchedRecipe } from '@/types';
+import { safeGetItem, safeSetItem } from '@/lib/storage-helpers';
+import { STORAGE_KEYS, EVENT_NAMES, NUMERIC } from '@/lib/constants';
 
 export default function Home() {
   const [ingredients, setIngredients] = useState<string[]>([]);
@@ -26,27 +28,24 @@ export default function Home() {
 
   // 解析分享链接 + 加载库存食材 + 加载人数设置
   useEffect(() => {
-    // 加载人数设置
-    const savedServings = localStorage.getItem('servings');
-    if (savedServings) {
-      setServings(parseInt(savedServings));
+    // 加载人数设置（带验证）
+    const savedServings = safeGetItem<number>(STORAGE_KEYS.SERVINGS, NUMERIC.MAX_SERVINGS);
+    if (savedServings > 0 && savedServings <= NUMERIC.MAX_SERVINGS) {
+      setServings(savedServings);
     }
 
     const { ingredients: sharedIngredients } = parseShareUrl();
     let baseIngredients: string[] = [];
 
-    // 加载库存食材
-    const pantryItems = localStorage.getItem('pantry-items');
-    if (pantryItems) {
-      baseIngredients = JSON.parse(pantryItems);
-    }
+    // 加载库存食材（安全解析）
+    baseIngredients = safeGetItem<string[]>(STORAGE_KEYS.PANTRY_ITEMS, []);
 
     if (sharedIngredients.length > 0) {
       // 有分享链接，合并分享食材和库存食材
       const allIngredients = Array.from(new Set([...baseIngredients, ...sharedIngredients]));
       setIngredients(allIngredients);
       // 保存到库存
-      localStorage.setItem('pantry-items', JSON.stringify(allIngredients));
+      safeSetItem(STORAGE_KEYS.PANTRY_ITEMS, allIngredients);
       const matched = matchRecipes(allIngredients);
       setMatchedRecipes(matched);
     } else if (baseIngredients.length > 0) {
@@ -76,7 +75,7 @@ export default function Home() {
   // 监听库存更新事件，重新计算菜谱匹配
   useEffect(() => {
     const handlePantryUpdate = () => {
-      const pantryItems = JSON.parse(localStorage.getItem('pantry-items') || '[]');
+      const pantryItems = safeGetItem<string[]>(STORAGE_KEYS.PANTRY_ITEMS, []);
       // 同步库存食材到输入框
       setIngredients(pantryItems);
       const matched = matchRecipes(pantryItems);
@@ -87,11 +86,11 @@ export default function Home() {
       handlePantryUpdate();
     };
 
-    window.addEventListener('pantry-updated', handlePantryUpdate);
-    window.addEventListener('recipes-need-update', handleRecipesNeedUpdate);
+    window.addEventListener(EVENT_NAMES.PANTRY_UPDATED, handlePantryUpdate);
+    window.addEventListener(EVENT_NAMES.RECIPES_NEED_UPDATE, handleRecipesNeedUpdate);
     return () => {
-      window.removeEventListener('pantry-updated', handlePantryUpdate);
-      window.removeEventListener('recipes-need-update', handleRecipesNeedUpdate);
+      window.removeEventListener(EVENT_NAMES.PANTRY_UPDATED, handlePantryUpdate);
+      window.removeEventListener(EVENT_NAMES.RECIPES_NEED_UPDATE, handleRecipesNeedUpdate);
     };
   }, []);
 
@@ -100,7 +99,7 @@ export default function Home() {
     const newIngredients = [...ingredients, ingredient];
     setIngredients(newIngredients);
     // 同步到库存
-    localStorage.setItem('pantry-items', JSON.stringify(newIngredients));
+    safeSetItem(STORAGE_KEYS.PANTRY_ITEMS, newIngredients);
     const matched = matchRecipes(newIngredients);
     setMatchedRecipes(matched);
   };
@@ -110,14 +109,14 @@ export default function Home() {
     const newIngredients = ingredients.filter(i => i !== ingredient);
     setIngredients(newIngredients);
     // 同步到库存
-    localStorage.setItem('pantry-items', JSON.stringify(newIngredients));
+    safeSetItem(STORAGE_KEYS.PANTRY_ITEMS, newIngredients);
     const matched = matchRecipes(newIngredients);
     setMatchedRecipes(matched);
   };
 
   // 添加到菜单
   const handleAddToShopping = (recipe: MatchedRecipe) => {
-    (window as any).addRecipeToMenu?.(recipe);
+    window.addRecipeToMenu?.(recipe);
   };
 
   // 分享功能
@@ -126,14 +125,14 @@ export default function Home() {
     const success = await copyToClipboard(url);
     if (success) {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), NUMERIC.TOAST_DURATION);
     }
   };
 
   // 修改人数设置
   const handleServingsChange = (newServings: number) => {
     setServings(newServings);
-    localStorage.setItem('servings', newServings.toString());
+    safeSetItem(STORAGE_KEYS.SERVINGS, newServings);
   };
 
   const canCookCount = matchedRecipes.filter(r => r.canCook).length;
@@ -265,7 +264,7 @@ export default function Home() {
       </nav>
 
       {/* 主内容 */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20 md:pb-8">
+      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20 md:pb-8">
         {/* Hero 区域 */}
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">

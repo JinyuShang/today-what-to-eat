@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { ShoppingCart, Check, X, Copy, Trash2 } from 'lucide-react';
 import { ShoppingItem } from '@/types';
-import { getIngredientCategory, copyToClipboard } from '@/lib/utils';
-import { cn } from '@/lib/utils';
+import { getIngredientCategory, copyToClipboard, cn } from '@/lib/utils';
+import { safeGetItem, safeSetItem } from '@/lib/storage-helpers';
+import { STORAGE_KEYS, EVENT_NAMES } from '@/lib/constants';
 
 interface ShoppingListProps {
   isOpen: boolean;
@@ -17,10 +18,8 @@ export function ShoppingList({ isOpen, onClose }: ShoppingListProps) {
 
   // 从 localStorage 加载
   useEffect(() => {
-    const saved = localStorage.getItem('shopping-list');
-    if (saved) {
-      setItems(JSON.parse(saved));
-    }
+    const savedItems = safeGetItem<ShoppingItem[]>(STORAGE_KEYS.SHOPPING_LIST, []);
+    setItems(savedItems);
   }, []);
 
   // 监听重置购物清单事件
@@ -28,16 +27,16 @@ export function ShoppingList({ isOpen, onClose }: ShoppingListProps) {
     const handleReset = () => {
       setItems([]);
     };
-    window.addEventListener('reset-shopping-list', handleReset);
+    window.addEventListener(EVENT_NAMES.RESET_SHOPPING_LIST, handleReset);
     return () => {
-      window.removeEventListener('reset-shopping-list', handleReset);
+      window.removeEventListener(EVENT_NAMES.RESET_SHOPPING_LIST, handleReset);
     };
   }, []);
 
   // 保存到 localStorage
   useEffect(() => {
     if (items.length > 0) {
-      localStorage.setItem('shopping-list', JSON.stringify(items));
+      safeSetItem(STORAGE_KEYS.SHOPPING_LIST, items);
     }
   }, [items]);
 

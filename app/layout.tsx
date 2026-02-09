@@ -16,7 +16,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        {/* 跳过导航链接 - 可访问性 */}
+        <a href="#main-content" className="skip-to-content">
+          跳转到主要内容
+        </a>
+        {children}
+      </body>
     </html>
   );
 }

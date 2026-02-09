@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MatchedRecipe } from '@/types';
+import { MatchedRecipe, MenuItem } from '@/types';
 import { RecipeCard } from './RecipeCard';
 import { isFavorite, addFavorite, removeFavorite, addHistory } from '@/lib/storage';
+import { safeGetItem } from '@/lib/storage-helpers';
+import { STORAGE_KEYS, EVENT_NAMES } from '@/lib/constants';
 
 interface RecipeListProps {
   recipes: MatchedRecipe[];
@@ -23,12 +25,9 @@ export function RecipeList({ recipes, onAddToShopping, servings }: RecipeListPro
 
   // 加载菜单状态
   useEffect(() => {
-    const saved = localStorage.getItem('menu-items');
-    if (saved) {
-      const menuItems = JSON.parse(saved);
-      const ids = new Set<string>(menuItems.map((item: any) => item.recipe.id));
-      setMenuRecipeIds(ids);
-    }
+    const menuItems = safeGetItem<MenuItem[]>(STORAGE_KEYS.MENU_ITEMS, []);
+    const ids = new Set<string>(menuItems.map(item => item.recipe.id));
+    setMenuRecipeIds(ids);
   }, []);
 
   // 监听收藏变化事件（从收藏面板删除时触发）
@@ -42,28 +41,23 @@ export function RecipeList({ recipes, onAddToShopping, servings }: RecipeListPro
       });
     };
 
-    window.addEventListener('favorite-changed', handleFavoriteChange as EventListener);
+    window.addEventListener(EVENT_NAMES.FAVORITE_CHANGED, handleFavoriteChange as EventListener);
     return () => {
-      window.removeEventListener('favorite-changed', handleFavoriteChange as EventListener);
+      window.removeEventListener(EVENT_NAMES.FAVORITE_CHANGED, handleFavoriteChange as EventListener);
     };
   }, []);
 
   // 监听菜单变化事件
   useEffect(() => {
     const handleMenuChange = () => {
-      const saved = localStorage.getItem('menu-items');
-      if (saved) {
-        const menuItems = JSON.parse(saved);
-        const ids = new Set<string>(menuItems.map((item: any) => item.recipe.id));
-        setMenuRecipeIds(ids);
-      } else {
-        setMenuRecipeIds(new Set());
-      }
+      const menuItems = safeGetItem<MenuItem[]>(STORAGE_KEYS.MENU_ITEMS, []);
+      const ids = new Set<string>(menuItems.map(item => item.recipe.id));
+      setMenuRecipeIds(ids);
     };
 
-    window.addEventListener('menu-changed', handleMenuChange as EventListener);
+    window.addEventListener(EVENT_NAMES.MENU_CHANGED, handleMenuChange as EventListener);
     return () => {
-      window.removeEventListener('menu-changed', handleMenuChange as EventListener);
+      window.removeEventListener(EVENT_NAMES.MENU_CHANGED, handleMenuChange as EventListener);
     };
   }, []);
 
@@ -71,12 +65,12 @@ export function RecipeList({ recipes, onAddToShopping, servings }: RecipeListPro
   useEffect(() => {
     const handlePantryUpdate = () => {
       // 触发父组件重新匹配菜谱
-      window.dispatchEvent(new Event('recipes-need-update'));
+      window.dispatchEvent(new Event(EVENT_NAMES.RECIPES_NEED_UPDATE));
     };
 
-    window.addEventListener('pantry-updated', handlePantryUpdate);
+    window.addEventListener(EVENT_NAMES.PANTRY_UPDATED, handlePantryUpdate);
     return () => {
-      window.removeEventListener('pantry-updated', handlePantryUpdate);
+      window.removeEventListener(EVENT_NAMES.PANTRY_UPDATED, handlePantryUpdate);
     };
   }, []);
 

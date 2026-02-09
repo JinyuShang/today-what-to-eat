@@ -55,6 +55,13 @@ export interface ShoppingItem {
   recipeId?: string;
 }
 
+// 菜单项（用于菜单面板）
+export interface MenuItem {
+  recipe: MatchedRecipe;
+  addedAt: number;
+  originalMissingIngredients: string[];
+}
+
 // 食材分类
 export const INGREDIENT_CATEGORIES = {
   vegetable: ['番茄', '土豆', '白菜', '胡萝卜', '黄瓜', '茄子', '青椒', '洋葱', '韭菜', '豆角', '芹菜', '菠菜', '生菜', '西兰花', '冬瓜', '南瓜'],

@@ -22,8 +22,40 @@ const config: Config = {
           900: '#7c2d12',
         },
       },
+      // 可访问性：添加自定义 focus ring 样式
+      ringWidth: {
+        DEFAULT: '2px',
+      },
+      ringOffsetWidth: {
+        DEFAULT: '2px',
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    // 自定义样式：focus-visible 只在键盘导航时显示
+    function({ addUtilities }) {
+      addUtilities({
+        '.focus-ring': {
+          '&:focus-visible': {
+            'outline': 'none',
+            'box-shadow': '0 0 0 2px #fff, 0 0 0 4px #f97316',
+          },
+        },
+        '.focus-ring-inset': {
+          '&:focus-visible': {
+            'outline': 'none',
+            'box-shadow': 'inset 0 0 0 2px #f97316',
+          },
+        },
+        // 确保所有交互元素在 focus 时可见
+        '.accessibility-focus': {
+          '&:focus-visible': {
+            'outline': '2px solid #f97316',
+            'outline-offset': '2px',
+          },
+        },
+      });
+    },
+  ],
 };
 export default config;

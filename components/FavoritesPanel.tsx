@@ -5,6 +5,9 @@ import { getUserData, removeFavorite } from '@/lib/storage';
 import { getRecipeById, matchRecipes } from '@/lib/recipe-db';
 import { Clock, Heart, X, Trash2, BookOpen, Check } from 'lucide-react';
 import { formatTime } from '@/lib/utils';
+import { safeGetItem } from '@/lib/storage-helpers';
+import { STORAGE_KEYS, EVENT_NAMES } from '@/lib/constants';
+import { MenuItem } from '@/types';
 
 interface FavoritesPanelProps {
   isOpen: boolean;
@@ -25,33 +28,23 @@ export function FavoritesPanel({ isOpen, onClose, onSelect, onRemove }: Favorite
       setFavoriteIds(data.favorites);
 
       // 加载菜单中的菜谱
-      const saved = localStorage.getItem('menu-items');
-      if (saved) {
-        const menuItems = JSON.parse(saved);
-        const ids = new Set<string>(menuItems.map((item: any) => item.recipe.id));
-        setMenuRecipeIds(ids);
-      } else {
-        setMenuRecipeIds(new Set());
-      }
+      const menuItems = safeGetItem<MenuItem[]>(STORAGE_KEYS.MENU_ITEMS, []);
+      const ids = new Set<string>(menuItems.map(item => item.recipe.id));
+      setMenuRecipeIds(ids);
     }
   }, [isOpen]);
 
   // 监听菜单变化
   useEffect(() => {
     const handleMenuChange = () => {
-      const saved = localStorage.getItem('menu-items');
-      if (saved) {
-        const menuItems = JSON.parse(saved);
-        const ids = new Set<string>(menuItems.map((item: any) => item.recipe.id));
-        setMenuRecipeIds(ids);
-      } else {
-        setMenuRecipeIds(new Set());
-      }
+      const menuItems = safeGetItem<MenuItem[]>(STORAGE_KEYS.MENU_ITEMS, []);
+      const ids = new Set<string>(menuItems.map(item => item.recipe.id));
+      setMenuRecipeIds(ids);
     };
 
-    window.addEventListener('menu-changed', handleMenuChange);
+    window.addEventListener(EVENT_NAMES.MENU_CHANGED, handleMenuChange);
     return () => {
-      window.removeEventListener('menu-changed', handleMenuChange);
+      window.removeEventListener(EVENT_NAMES.MENU_CHANGED, handleMenuChange);
     };
   }, []);
 

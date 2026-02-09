@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Package, Check, X, Save } from 'lucide-react';
+import { Package, Check, X, Save, AlertCircle } from 'lucide-react';
 import { INGREDIENT_CATEGORIES } from '@/types';
 import { cn } from '@/lib/utils';
+import { NUMERIC, ERROR_MESSAGES } from '@/lib/constants';
 
 interface PantryPanelProps {
   isOpen: boolean;
@@ -28,6 +29,36 @@ const CATEGORY_NAMES = {
 export function PantryPanel({ isOpen, onClose }: PantryPanelProps) {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [customItem, setCustomItem] = useState('');
+  const [customItemError, setCustomItemError] = useState<string | null>(null);
+
+  // 添加自定义食材（带验证）
+  const addCustomItem = (item: string) => {
+    const trimmed = item.trim();
+
+    // 验证：空字符串
+    if (!trimmed) {
+      setCustomItemError('请输入食材名称');
+      return false;
+    }
+
+    // 验证：长度限制
+    if (trimmed.length > NUMERIC.MAX_INGREDIENT_LENGTH) {
+      setCustomItemError(ERROR_MESSAGES.INGREDIENT_TOO_LONG);
+      return false;
+    }
+
+    // 验证：重复检查
+    if (selectedItems.has(trimmed)) {
+      setCustomItemError('该食材已添加');
+      return false;
+    }
+
+    // 清除错误并添加
+    setCustomItemError(null);
+    setSelectedItems(prev => new Set(prev).add(trimmed));
+    setCustomItem('');
+    return true;
+  };
 
   // 从 localStorage 加载库存（每次打开时重新加载）
   useEffect(() => {
@@ -191,28 +222,39 @@ export function PantryPanel({ isOpen, onClose }: PantryPanelProps) {
                   <input
                     type="text"
                     value={customItem}
-                    onChange={(e) => setCustomItem(e.target.value)}
+                    onChange={(e) => {
+                      setCustomItem(e.target.value);
+                      setCustomItemError(null);
+                    }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && customItem.trim()) {
-                        setSelectedItems(prev => new Set(prev).add(customItem.trim()));
-                        setCustomItem('');
+                      if (e.key === 'Enter') {
+                        addCustomItem(customItem);
                       }
                     }}
                     placeholder="输入自定义食材，如：牛肉、豆腐..."
-                    className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    maxLength={NUMERIC.MAX_INGREDIENT_LENGTH}
+                    className={cn(
+                      "flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent",
+                      customItemError
+                        ? "border-red-300 focus:ring-red-500"
+                        : "border-gray-200 focus:ring-blue-500"
+                    )}
                   />
                   <button
-                    onClick={() => {
-                      if (customItem.trim()) {
-                        setSelectedItems(prev => new Set(prev).add(customItem.trim()));
-                        setCustomItem('');
-                      }
-                    }}
+                    onClick={() => addCustomItem(customItem)}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
                   >
                     添加
                   </button>
                 </div>
+
+                {/* 自定义食材错误提示 */}
+                {customItemError && (
+                  <div className="mb-3 flex items-center gap-2 px-3 py-2 bg-red-50 text-red-700 rounded-lg text-sm">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span>{customItemError}</span>
+                  </div>
+                )}
 
                 {/* 自定义食材列表 */}
                 {customItems.length > 0 && (

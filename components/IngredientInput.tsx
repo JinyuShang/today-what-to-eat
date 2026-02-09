@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, KeyboardEvent } from 'react';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, AlertCircle } from 'lucide-react';
 import { INGREDIENT_CATEGORIES } from '@/types';
 import { cn } from '@/lib/utils';
+import { NUMERIC, ERROR_MESSAGES } from '@/lib/constants';
 
 interface IngredientInputProps {
   ingredients: string[];
@@ -13,13 +14,33 @@ interface IngredientInputProps {
 
 export function IngredientInput({ ingredients, onAdd, onRemove }: IngredientInputProps) {
   const [input, setInput] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const handleAdd = (ingredient: string) => {
     const trimmed = ingredient.trim();
-    if (trimmed && !ingredients.includes(trimmed)) {
-      onAdd(trimmed);
-      setInput('');
+
+    // 验证：空字符串
+    if (!trimmed) {
+      setError('请输入食材名称');
+      return;
     }
+
+    // 验证：长度限制
+    if (trimmed.length > NUMERIC.MAX_INGREDIENT_LENGTH) {
+      setError(ERROR_MESSAGES.INGREDIENT_TOO_LONG);
+      return;
+    }
+
+    // 验证：重复检查
+    if (ingredients.includes(trimmed)) {
+      setError('该食材已添加');
+      return;
+    }
+
+    // 清除错误并添加
+    setError(null);
+    onAdd(trimmed);
+    setInput('');
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -43,10 +64,19 @@ export function IngredientInput({ ingredients, onAdd, onRemove }: IngredientInpu
           <input
             type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              setError(null); // 清除错误
+            }}
             onKeyDown={handleKeyDown}
             placeholder="输入食材，如：番茄、鸡蛋..."
-            className="w-full px-4 py-3 pr-14 md:pr-12 border-2 border-orange-200 rounded-xl focus:border-orange-400 focus:outline-none transition-colors touch-manipulation"
+            maxLength={NUMERIC.MAX_INGREDIENT_LENGTH}
+            className={cn(
+              "w-full px-4 py-3 pr-14 md:pr-12 border-2 rounded-xl focus:outline-none transition-colors touch-manipulation",
+              error
+                ? "border-red-300 focus:border-red-400"
+                : "border-orange-200 focus:border-orange-400"
+            )}
           />
           <button
             onClick={() => handleAdd(input)}
@@ -56,6 +86,14 @@ export function IngredientInput({ ingredients, onAdd, onRemove }: IngredientInpu
           </button>
         </div>
       </div>
+
+      {/* 错误提示 */}
+      {error && (
+        <div className="flex items-center gap-2 px-4 py-3 bg-red-50 text-red-700 rounded-xl text-sm animate-fadeIn">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* 已选食材 */}
       {ingredients.length > 0 && (

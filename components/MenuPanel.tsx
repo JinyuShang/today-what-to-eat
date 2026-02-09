@@ -2,24 +2,12 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { BookOpen, X, Trash2, ShoppingCart, Calendar, CheckCircle, Users } from 'lucide-react';
-import { MatchedRecipe } from '@/types';
-import { formatTime, cn } from '@/lib/utils';
-import { getIngredientCategory } from '@/lib/utils';
+import { MatchedRecipe, MenuItem } from '@/types';
+import { formatTime, cn, getIngredientCategory } from '@/lib/utils';
 import { matchRecipes } from '@/lib/recipe-db';
 import { calculateIngredientAmount, getShoppingTips } from '@/lib/ingredient-portions';
-
-interface MenuPanelProps {
-  isOpen: boolean;
-  onClose: () => void;
-  userIngredients?: string[]; // 新增：用户输入的食材
-  servings: number; // 全局人数设置
-}
-
-interface MenuItem {
-  recipe: MatchedRecipe;
-  addedAt: number;
-  originalMissingIngredients: string[]; // 记录添加时的缺少食材
-}
+import { safeGetItem, safeSetItem } from '@/lib/storage-helpers';
+import { STORAGE_KEYS, EVENT_NAMES } from '@/lib/constants';
 
 export function MenuPanel({ isOpen, onClose, userIngredients = [], servings }: MenuPanelProps) {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -28,25 +16,23 @@ export function MenuPanel({ isOpen, onClose, userIngredients = [], servings }: M
 
   // 从 localStorage 加载菜单
   useEffect(() => {
-    const saved = localStorage.getItem('menu-items');
-    if (saved) {
-      setMenuItems(JSON.parse(saved));
-    }
+    const savedItems = safeGetItem<MenuItem[]>(STORAGE_KEYS.MENU_ITEMS, []);
+    setMenuItems(savedItems);
   }, []);
 
   // 加载库存食材
   useEffect(() => {
     const loadPantry = () => {
-      const pantry = JSON.parse(localStorage.getItem('pantry-items') || '[]');
+      const pantry = safeGetItem<string[]>(STORAGE_KEYS.PANTRY_ITEMS, []);
       setPantryIngredients(pantry);
     };
 
     loadPantry();
 
     // 监听库存更新事件
-    window.addEventListener('pantry-updated', loadPantry);
+    window.addEventListener(EVENT_NAMES.PANTRY_UPDATED, loadPantry);
     return () => {
-      window.removeEventListener('pantry-updated', loadPantry);
+      window.removeEventListener(EVENT_NAMES.PANTRY_UPDATED, loadPantry);
     };
   }, []);
 
